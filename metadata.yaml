@@ -1,23 +1,21 @@
+
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-# For a complete list of supported options, see:
-# https://juju.is/docs/sdk/metadata-reference
-name: hpct-slurm-client-operator
+name: hpct-slurm-server
 display-name: |
-  TEMPLATE-TODO: fill out a display name for the Charmcraft store
+  HPCT Slurm Client Operator
 description: |
-  TEMPLATE-TODO: fill out the charm's description
+  SLURM client operator for deploying compute nodes.
 summary: |
-  TEMPLATE-TODO: fill out the charm's summary
+  SLURM client operator for deploying compute nodes.
+  Comes with slurmd and munge installed.
+maintainers:
+  - Jason C. Nucciarone <jason.nucciarone@canonical.com>
 
-# TEMPLATE-TODO: replace with containers for your workload (delete for non-k8s)
-containers:
-  httpbin:
-    resource: httpbin-image
+subordinate: true
 
-# TEMPLATE-TODO: each container defined above must specify an oci-image resource
-resources:
-  httpbin-image:
-    type: oci-image
-    description: OCI image for httpbin (kennethreitz/httpbin)
+requires:
+  slurm-info:
+    interface: slurm-info
+    scope: container

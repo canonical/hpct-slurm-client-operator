@@ -1,10 +1,22 @@
-# Learn more about charmcraft.yaml configuration at:
-# https://juju.is/docs/sdk/charmcraft-config
+
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 type: "charm"
+
 bases:
   - build-on:
     - name: "ubuntu"
-      channel: "20.04"
+      channel: "22.04"
     run-on:
     - name: "ubuntu"
-      channel: "20.04"
+      channel: "22.04"
+
+parts:
+  charm:
+    charm-binary-python-packages:
+      - cryptography
+
+    override-build: |
+      apt-get install -y python3-apt python3-dbus
+      craftctl default

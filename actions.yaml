@@ -1,16 +1,43 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# TEMPLATE-TODO: change this example to suit your needs.
-# If you don't need actions, you can remove the file entirely.
-# It ties in to the example _on_fortune_action handler in src/charm.py
-#
-# Learn more about actions at: https://juju.is/docs/sdk/actions
 
-fortune:
-  description: Returns a pithy phrase.
+service-restart:
+  description: Restart services.
   params:
-    fail:
-      description: "Fail with this message"
+    force:
+      description: Force action.
+      type: boolean
+      default: false
+    sync:
+      description: Sync configuration.
+      type: boolean
+      default: false
+
+service-set-sync-status:
+  description: Set sync status (debugging).
+  params:
+    key:
+      description: Sync key.
       type: string
-      default: ""
+    value:
+      description: Sync status.
+      type: boolean
+
+service-start:
+  description: Start services.
+
+service-stop:
+  description: Stop services.
+  params:
+    force:
+      description: Force action.
+      type: boolean
+      default: false
+
+service-sync:
+  description: Sync configuration.
+  params:
+    force:
+      description: Force action.
+      type: boolean
+      default: false
