@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: hpct-slurm-server
+name: hpct-slurm-client
 display-name: |
   HPCT Slurm Client Operator
 description: |
