@@ -2,7 +2,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Set up and manage slurmd"""
+"""Set up and manage slurmd."""
 
 import logging
 
