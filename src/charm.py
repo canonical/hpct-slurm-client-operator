@@ -25,6 +25,9 @@ class SlurmClientCharm(ServiceCharm):
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.framework.observe(self.on.auth_start_action, self._auth_start)
+        self.framework.observe(self.on.auth_stop_action, self._auth_stop)
+
         self.manager = SlurmClientManager()
         self.auth_manager = MungeManager()
 
