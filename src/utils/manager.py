@@ -68,8 +68,8 @@ class SlurmClientManager:
 
     def _start_slurmd(self) -> None:
         logger.debug("Starting slurmd service.")
-        self.manager.StartUnit("slurmd.service", "fail")
-        self.manager.Reload()
+        self.systemd.StartUnit("slurmd.service", "fail")
+        self.systemd.Reload()
         logger.debug("slurmd service started.")
 
     def stop(self, knob: str) -> None:
@@ -84,6 +84,6 @@ class SlurmClientManager:
 
     def _stop_slurmd(self) -> None:
         logger.debug("Stopping slurmd service.")
-        self.manager.StopUnit("slurmd.service", "fail")
-        self.manager.Reload()
+        self.systemd.StopUnit("slurmd.service", "fail")
+        self.systemd.Reload()
         logger.debug("slurmd service stopped.")
