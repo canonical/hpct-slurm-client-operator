@@ -35,7 +35,7 @@ class SlurmClientCharm(ServiceCharm):
         """Fired when auth-start is run."""
         self.auth_manager.start()
 
-    def _auth_stop(self, event: ActionEvent, force: bool) -> None:
+    def _auth_stop(self, event: ActionEvent) -> None:
         """Fired when auth-stop is run."""
         self.auth_manager.stop()
 
