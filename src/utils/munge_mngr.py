@@ -22,8 +22,8 @@ class MungeManager:
         self.systemd = dbus.Interface(_systemd, "org.freedesktop.systemd1.Manager")
 
     def install(self) -> None:
-        """Install SLURM compute daemon"""
-        logger.debug("Installing MUNGE.")
+        """Install munge."""
+        logger.debug("Installing munge.")
         cache = apt.Cache()
         slurmctld_pkg = cache["munge"]
         slurmctld_pkg.mark_install()
