@@ -25,8 +25,8 @@ class MungeManager:
         """Install munge."""
         logger.debug("Installing munge.")
         cache = apt.Cache()
-        slurmctld_pkg = cache["munge"]
-        slurmctld_pkg.mark_install()
+        munge_pkg = cache["munge"]
+        munge_pkg.mark_install()
         cache.commit()
         logger.debug("munge installed.")
 
