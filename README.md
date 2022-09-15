@@ -1,21 +1,16 @@
-# hpct-slurm-client-operator
+# hpct-slurm-client
 
 ## Description
 
-TODO: Describe your charm in a few paragraphs of Markdown
+The HPCT team's slurm client operator. Installs and manages `slurmd` and `munge` daemon.
 
 ## Usage
 
-TODO: Provide high-level usage, such as required config or relations
-
+See xwiki post [here](https://hpc4can.ddns.net/xwiki/bin/view/Users/nuccitheboss/Nucci's%20Howtos/Setup%20HPC%20cluster%20with%20hpct%20charms/).
 
 ## Relations
 
-TODO: Provide any relations which are provided or required by your charm
-
-## OCI Images
-
-TODO: Include a link to the default image your charm uses
+`slurm-info` - used to connect to principle charm.
 
 ## Contributing
 
