@@ -6,44 +6,50 @@
 
 import logging
 
-import apt
-import dbus
-
+import charms.operator_libs_linux.v0.apt as apt
+from charms.operator_libs_linux.v1.systemd import (
+    service_restart,
+    service_running,
+    service_start,
+    service_stop,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class MungeManager:
-    def __init__(self) -> None:
-        _bus = dbus.SystemBus()
-        _systemd = _bus.get_object(
-            "org.freedesktop.systemd1", "/org/freedesktop/systemd1"
-        )
-        self.systemd = dbus.Interface(_systemd, "org.freedesktop.systemd1.Manager")
-
     def install(self) -> None:
-        """Install munge."""
-        logger.debug("Installing munge.")
-        cache = apt.Cache()
-        munge_pkg = cache["munge"]
-        munge_pkg.mark_install()
-        cache.commit()
-        logger.debug("munge installed.")
-
-    def enable(self) -> None:
-        logger.debug("Enabling munge service.")
-        self.systemd.EnableUnitFiles(["munge.service"], False, True)
-        self.systemd.Reload()
-        logger.debug("munge service enabled.")
+        """Install MUNGE."""
+        try:
+            logger.debug("Installing MUNGE authentication daemon (munge).")
+            apt.add_package("munge")
+        except apt.PackageNotFoundError:
+            logger.error("Could not install munge. Not found in package cache.")
+        except apt.PackageError as e:
+            logger.error(f"Could not install munge. Reason: {e.message}.")
+        finally:
+            logger.debug("munge installed.")
 
     def start(self) -> None:
+        """Start MUNGE daemon."""
         logger.debug("Starting munge service.")
-        self.systemd.StartUnit("munge.service", "fail")
-        self.systemd.Reload()
-        logger.debug("slurmd service started.")
+        if not service_running("munge"):
+            service_start("munge")
+            logger.debug("munnge service started.")
+        else:
+            logger.debug("munge service is already running.")
 
     def stop(self) -> None:
+        """Stop MUNGE daemon."""
         logger.debug("Stopping munge service.")
-        self.systemd.StopUnit("munge.service", "fail")
-        self.systemd.Reload()
-        logger.debug("munge service stopped.")
+        if service_running("munge"):
+            service_stop("munge")
+            logger.debug("munge service stopped.")
+        else:
+            logger.debug("munge service is already stopped.")
+
+    def restart(self) -> None:
+        """Restart MUNGE daemon."""
+        logger.debug("Restarting munge service.")
+        service_restart("munge")
+        logger.debug("munge service restarted.")

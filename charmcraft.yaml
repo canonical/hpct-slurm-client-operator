@@ -1,4 +1,3 @@
-
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
@@ -16,7 +15,3 @@ parts:
   charm:
     charm-binary-python-packages:
       - cryptography
-
-    override-build: |
-      apt-get install -y python3-apt python3-dbus
-      craftctl default
