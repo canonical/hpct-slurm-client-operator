@@ -1,34 +1,64 @@
-# hpct-slurm-client-operator
+# Contributing
+
+## Overview
+
+This document explains the processes and practices recommended for contributing enhancements to
+this operator.
+
+- Generally, before developing enhancements to this charm, you should consider [opening an issue
+  ](https://github.com/canonical/hpct-slurm-client-operator/issues) explaining your use case.
+- If you would like to chat with us about your use-cases or proposed implementation, you can reach
+  us at [Canonical Mattermost public channel](https://chat.charmhub.io/charmhub/channels/charm-dev)
+  or [Discourse](https://discourse.charmhub.io/).
+- Familiarising yourself with the [Charmed Operator Framework](https://juju.is/docs/sdk) library
+  will help you a lot when working on new features or bug fixes.
+- All enhancements require review before being merged. Code review typically examines
+  - code quality
+  - test coverage
+  - user experience for Juju administrators of this charm.
+- Please help us out in ensuring easy to review branches by rebasing your pull request branch onto
+  the `main` branch. This also avoids merge commits and creates a linear Git commit history.
 
 ## Developing
 
-Create and activate a virtualenv with the development requirements:
+You can use the environments created by `tox` for development:
 
-    virtualenv -p python3 venv
-    source venv/bin/activate
-    pip install -r requirements-dev.txt
+```shell
+tox --notest -e unit
+source .tox/unit/bin/activate
+```
 
-## Code overview
+### Testing
 
-TEMPLATE-TODO:
-One of the most important things a consumer of your charm (or library)
-needs to know is what set of functionality it provides. Which categories
-does it fit into? Which events do you listen to? Which libraries do you
-consume? Which ones do you export and how are they used?
+```shell
+tox -e fmt           # update your code according to linting rules
+tox -e lint          # code style
+tox -e unit          # unit tests
+tox -e integration   # integration tests
+tox                  # runs 'lint' and 'unit' environments
+```
 
-## Intended use case
+## Build charm
 
-TEMPLATE-TODO:
-Why were these decisions made? What's the scope of your charm?
+Build the charm in this git repository using:
 
-## Roadmap
+```shell
+charmcraft pack
+```
 
-If this Charm doesn't fulfill all of the initial functionality you were
-hoping for or planning on, please add a Roadmap or TODO here
+### Deploy
 
-## Testing
+```bash
+# Create a model
+juju add-model dev
+# Enable DEBUG logging
+juju model-config logging-config="<root>=INFO;unit=DEBUG"
+# Deploy the subordinate charm
+juju deploy ./hpct-slurm-client_ubuntu-22.04-amd64.charm
+# Relate the subordinate charm to a principal charm with the `slurm-info` relation
+juju relate hpct-slurm-client principal-charm
+```
 
-The Python operator framework includes a very nice harness for testing
-operator behaviour without full deployment. Just `run_tests`:
+## Canonical Contributor Agreement
 
-    ./run_tests
+Canonical welcomes contributions to the Charmed SLURM Client Operator. Please check out our [contributor agreement](https://ubuntu.com/legal/contributors) if you are interested in contributing to the solution.
