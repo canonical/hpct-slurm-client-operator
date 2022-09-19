@@ -2,5 +2,5 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-from .munge_mngr import MungeManager
-from .slurm_mngr import SlurmClientManager
+from .munge import MungeManager
+from .slurm_client import SlurmClientManager

@@ -12,7 +12,7 @@ from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus
 
-from utils import MungeManager, SlurmClientManager
+from manager import MungeManager, SlurmClientManager
 
 
 logger = logging.getLogger(__name__)
