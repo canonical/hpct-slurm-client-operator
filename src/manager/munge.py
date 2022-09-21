@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class MungeManager:
+    """Top-level manager class for controlling munge on unit."""
+
     def install(self) -> None:
         """Install MUNGE."""
         try:

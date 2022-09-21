@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class SlurmClientCharm(ServiceCharm):
+    """Slurm client charm. Encapsulates slurmd and munge."""
 
     _stored = StoredState()
 
@@ -30,47 +31,69 @@ class SlurmClientCharm(ServiceCharm):
         self.manager = SlurmClientManager()
         self.auth_manager = MungeManager()
 
+    @service_forced_update()
     def _auth_start(self, event: ActionEvent) -> None:
         """Fired when auth-start is run."""
         self.service_set_state("idle")
         self.service_set_status_message("Starting munge")
+        self.service_update_status()
         self.auth_manager.start()
+
         self.service_set_state("started")
         self.service_set_status_message()
+        self.service_update_status()
 
+    @service_forced_update()
     def _auth_stop(self, event: ActionEvent) -> None:
         """Fired when auth-stop is run."""
         self.service_set_state("idle")
         self.service_set_status_message("Stopping munge")
+        self.service_update_status()
         self.auth_manager.stop()
+
         self.service_set_state("broken")
         self.service_set_status_message("Authentication service is not active.")
+        self.service_update_status()
 
+    @service_forced_update()
     def _service_install(self, event: InstallEvent) -> None:
-        "Fired when charm is first deployed."
+        """Fired when charm is first deployed."""
         self.service_set_state("waiting")
         self.service_set_status_message("Installing munge")
+        self.service_update_status()
         self.auth_manager.install()
+
         self.service_set_status_message("Installing slurmd")
+        self.service_update_status()
         self.manager.install()
+
         self.service_set_state("started")
         self.service_set_status_message()
+        self.service_update_status()
 
+    @service_forced_update()
     def _service_start(self, event: StartEvent) -> None:
         """Fired when service-start is run."""
         self.service_set_state("idle")
         self.service_set_status_message("Starting slurmd")
+        self.service_update_status()
         self.manager.start()
+
         self.service_set_state("started")
         self.service_set_status_message()
+        self.service_update_status()
 
+    @service_forced_update()
     def _service_stop(self, event: StopEvent, force: bool) -> None:
         """Fired when service-stop is run."""
         self.service_set_state("idle")
         self.service_set_status_message("Stopping slurmctld")
+        self.service_update_status()
         self.manager.stop()
+
         self.service_set_state("broken")
         self.service_set_status_message("Slurm server is not active.")
+        self.service_update_status()
 
 
 if __name__ == "__main__":
