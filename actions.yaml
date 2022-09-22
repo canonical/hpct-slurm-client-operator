@@ -1,12 +1,6 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-auth-start:
-  description: Start node authentication service.
-
-auth-stop:
-  description: Stop node authentication service.
-
 service-restart:
   description: Restart services.
   params:
@@ -19,14 +13,14 @@ service-restart:
       type: boolean
       default: false
 
-service-set-sync-status:
-  description: Set sync status (debugging).
+service-set-sync:
+  description: Set sync value (debugging).
   params:
     key:
       description: Sync key.
       type: string
     value:
-      description: Sync status.
+      description: Sync value.
       type: boolean
 
 service-start:
