@@ -1,0 +1,20 @@
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: hpct-slurm-client-operator
+display-name: |
+  HPCT Slurm Client Operator
+description: |
+  SLURM client operator for deploying compute nodes.
+summary: |
+  SLURM client operator for deploying compute nodes.
+  Comes with slurmd and munge installed.
+maintainers:
+  - Jason C. Nucciarone <jason.nucciarone@canonical.com>
+
+subordinate: true
+
+requires:
+  slurm-client-ready:
+    interface: subordinate-ready
+    scope: container
