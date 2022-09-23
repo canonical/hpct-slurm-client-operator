@@ -15,6 +15,6 @@ maintainers:
 subordinate: true
 
 requires:
-  slurm-info:
-    interface: slurm-info
+  slurm-client-ready:
+    interface: ready
     scope: container
