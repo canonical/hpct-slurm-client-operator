@@ -37,7 +37,7 @@ class MungeManager:
         logger.debug("Starting munge service.")
         if not service_running("munge"):
             service_start("munge")
-            logger.debug("munnge service started.")
+            logger.debug("munge service started.")
         else:
             logger.debug("munge service is already running.")
 

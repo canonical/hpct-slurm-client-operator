@@ -54,9 +54,9 @@ juju add-model dev
 # Enable DEBUG logging
 juju model-config logging-config="<root>=INFO;unit=DEBUG"
 # Deploy the subordinate charm
-juju deploy ./hpct-slurm-client_ubuntu-22.04-amd64.charm
+juju deploy ./hpct-slurm-client-operator_ubuntu-22.04-amd64.charm
 # Relate the subordinate charm to a principal charm with the `slurm-info` relation
-juju relate hpct-slurm-client principal-charm
+juju relate hpct-slurm-client-operator principal-charm
 ```
 
 ## Canonical Contributor Agreement

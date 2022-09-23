@@ -1,16 +1,28 @@
-# hpct-slurm-client
+# hpct-slurm-client-operator
 
 ## Description
 
-The HPCT team's slurm client operator. Installs and manages `slurmd` and `munge` daemon.
+A subordinate charm that installs and manages `slurmd` and `munge` daemons on a principal charm.
 
 ## Usage
 
-See xwiki post [here](https://hpc4can.ddns.net/xwiki/bin/view/Users/nuccitheboss/Nucci's%20Howtos/Setup%20HPC%20cluster%20with%20hpct%20charms/).
+> See internal xwiki article [here](https://hpc4can.ddns.net/xwiki/bin/view/Users/nuccitheboss/Nucci's%20Howtos/Setup%20HPC%20cluster%20with%20hpct%20charms/).
+
+To deploy:
+
+```
+juju deploy ./hpct-slurm-client-operator_ubuntu-22.04-amd64.charm
+```
+
+Assuming a `hpct-xxx-principal-operator` has been deployed:
+
+```
+juju relate hpct-slurm-client-operator hpct-xxx-principal-operator
+```
 
 ## Relations
 
-`slurm-info` - used to connect to principle charm.
+`slurm-client-ready` - a requires relation used to connect to a principal charm that provides the relation.
 
 ## Contributing
 

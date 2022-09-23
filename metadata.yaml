@@ -1,7 +1,7 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: hpct-slurm-client
+name: hpct-slurm-client-operator
 display-name: |
   HPCT Slurm Client Operator
 description: |
@@ -16,5 +16,5 @@ subordinate: true
 
 requires:
   slurm-client-ready:
-    interface: ready
+    interface: subordinate-ready
     scope: container
