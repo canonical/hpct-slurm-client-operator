@@ -1,1 +1,4 @@
 ops >= 1.4.0
+sysprober == 0.1.2
+git+https://github.com/NucciTheBoss/hpct-ops.git@pip-install
+git+https://github.com/NucciTheBoss/hpct-interfaces.git@pip-install
