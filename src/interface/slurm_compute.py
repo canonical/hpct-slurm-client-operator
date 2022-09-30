@@ -4,9 +4,9 @@
 
 """Interface for the slurm-compute relation."""
 
-from hpctlib.interface.relation import RelationSuperInterface, UnitBucketInterface
-from hpctlib.interface.value import Integer, String
-from hpctlib.interface.value.network import IPAddress
+from hpctinterfaces.relation import RelationSuperInterface, UnitBucketInterface
+from hpctinterfaces.value import Integer, String
+from hpctinterfaces.value.network import IPAddress
 
 
 class SlurmComputeInterface(RelationSuperInterface):

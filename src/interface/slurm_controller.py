@@ -4,9 +4,9 @@
 
 """Interface for the slurm-controller relation."""
 
-from hpctlib.ext.interfaces.file import FileDataInterface
-from hpctlib.interface.relation import AppBucketInterface, RelationSuperInterface
-from hpctlib.interface.value import String
+from hpctinterfaces.ext.file import FileDataInterface
+from hpctinterfaces.relation import AppBucketInterface, RelationSuperInterface
+from hpctinterfaces.value import String
 
 
 class SlurmControllerInterface(RelationSuperInterface):
