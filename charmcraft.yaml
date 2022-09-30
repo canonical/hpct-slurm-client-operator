@@ -14,8 +14,8 @@ bases:
 parts:
   charm:
     override-build: |
-      # vendored pkgs
-      git --version || apt install -y git
+      # Vendored packages
+      git --version || apt-get install -y git
       rm -rf src/vendor hpctlib
       mkdir -p src/vendor
       (cd src/vendor; git clone -v https://github.com/j4m-can/hpct-library.git; cd ..; ln -sf vendor/hpct-library/lib/hpctlib .)
