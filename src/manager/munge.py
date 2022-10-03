@@ -4,8 +4,10 @@
 
 """Set up and manage munge."""
 
+import hashlib
 import logging
 import os
+import stat
 import subprocess
 
 import charms.operator_libs_linux.v0.apt as apt
@@ -15,7 +17,7 @@ from charms.operator_libs_linux.v1.systemd import (
     service_start,
     service_stop,
 )
-from hpctlib.ext.interfaces.file import FileDataInterface
+from hpctinterfaces.ext.file import FileDataInterface
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +30,20 @@ class MungeNotFoundError(Exception):
         self.desc = desc
         super().__init__(self.desc)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """String representation of MungeNotFoundError."""
         return f"{self.desc} Please install munge using {self.name}.install()."
 
 
 class MungeKeyNotFoundError(Exception):
-    """Raised when manager can not locate munge.key file on a unit."""
+    """Raised when manager cannot locate the `munge.key` file on a unit."""
 
     def __init__(self, path: str, desc: str = "Munge key not found on host.") -> None:
         self.path = path
         self.desc = desc
         super().__init__(self.desc)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """String representation of MungeKeyNotFoundError."""
         return f"{self.desc} Location searched: {self.path}"
 
@@ -50,11 +52,37 @@ class MungeManager:
     """Top-level manager class for controlling munge on unit."""
 
     @property
+    def installed(self) -> bool:
+        """Installation status of munge.
+
+        Returns:
+            bool: True if munge is installed on unit; False if munge is not installed on unit.
+        """
+        return self.__is_installed()
+
+    @property
+    def hash(self) -> str:
+        """sha224 hash of `munge.key`.
+
+        Raises:
+            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit
+
+        Returns:
+            str: sha224 hash of `munge.key`
+        """
+        if os.path.isfile("/etc/munge/munge.key"):
+            sha224 = hashlib.sha224()
+            sha224.update(open("/etc/munge/munge.key", "rb").read())
+            return sha224.hexdigest()
+        else:
+            raise MungeKeyNotFoundError("/etc/munge/munge.key")
+
+    @property
     def key(self) -> str:
         """Location of munge key file on unit.
 
         Raises:
-            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit.
+            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit
 
         Returns:
             str: Path to munge key file on unit
@@ -63,15 +91,6 @@ class MungeManager:
             return "/etc/munge/munge.key"
         else:
             raise MungeKeyNotFoundError("/etc/munge/munge.key")
-
-    @property
-    def installed(self) -> bool:
-        """Installation status of munge.
-
-        Returns:
-            bool: True if munge is installed on unit; False if munge is not installed on unit
-        """
-        return self.__is_installed()
 
     def generate_new_key(self) -> None:
         """Generate a new munge.key file using `mungekey` utility.
@@ -94,7 +113,7 @@ class MungeManager:
         """Write a new munge key to `/etc/munge/munge.key`.
 
         Args:
-            key (FileDataInterface): `munge.key` file received from event app
+            key (FileDataInterface): `munge.key` file received from event app.
 
         Raises:
             MungeNotFoundError: Thrown if munge is not yet installed on unit.
@@ -104,7 +123,8 @@ class MungeManager:
             self.stop()
             if os.path.isfile("/etc/munge/munge.key"):
                 os.remove("/etc/munge/munge.key")
-            key.save(key.path)
+            key.save(key.path, update_owner=True)
+            os.chmod("/etc/munge/munge.key", stat.S_IREAD | stat.S_IWRITE)
             logger.debug("New munge key set. Restarting munge daemon.")
             self.start()
         else:
