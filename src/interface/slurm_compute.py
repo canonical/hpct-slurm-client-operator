@@ -20,7 +20,8 @@ class SlurmComputeInterface(RelationSuperInterface):
     class SlurmComputeUnitInterface(UnitBucketInterface):
         """Used by slurm-compute nodes to provide information about themselves."""
 
-        hostname = String()
-        ip_address = IPAddress()
-        cpu_count = Integer()
-        free_memory = Integer()
+        nonce = String("")
+        hostname = String("")
+        ip_address = IPAddress("0.0.0.0")
+        cpu_count = Integer(0)
+        free_memory = Integer(0)

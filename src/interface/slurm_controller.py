@@ -20,5 +20,5 @@ class SlurmControllerInterface(RelationSuperInterface):
     class SlurmControllerAppInterface(AppBucketInterface):
         """Used by slurm-server leader to set the global slurm.conf file."""
 
-        slurm_conf_hash = String()
+        nonce = String("")
         slurm_conf = FileDataInterface()

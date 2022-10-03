@@ -20,5 +20,5 @@ class AuthMungeInterface(RelationSuperInterface):
     class AuthMungeAppInterface(AppBucketInterface):
         """Used by slurm-server leader to set the global munge key."""
 
-        munge_key_hash = String()
+        nonce = String("")
         munge_key = FileDataInterface()
