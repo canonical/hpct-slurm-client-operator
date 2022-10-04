@@ -5,6 +5,7 @@
 """HPC Team SLURM client charm."""
 
 import logging
+import secrets
 
 from hpctinterfaces import interface_registry
 from hpctops.charm.service import ServiceCharm
@@ -67,6 +68,7 @@ class SlurmClientCharm(ServiceCharm):
         self.service_set_status_message("Installing slurmd")
         self.service_update_status()
         self.slurm_client_manager.install()
+        self.slurm_client_manager.generate_dummy_conf()
 
         self.service_set_status_message()
         self.service_update_status()
@@ -120,12 +122,42 @@ class SlurmClientCharm(ServiceCharm):
     @service_forced_update()
     def _slurm_compute_relation_joined(self, event: RelationJoinedEvent) -> None:
         """Fired when new SLURM controller is related to application."""
-        pass
+        self.service_set_status_message("Serving information to detected controller")
+        self.service_update_status()
+        i = self.slurm_compute_interface.select(self.unit)
+        i.nonce = self.__create_nonce()
+        i.hostname = self.slurm_client_manager.hostname
+        i.ip_address = self.slurm_client_manager.ipv4_address
+        i.cpu_count = self.slurm_client_manager.cpu_count
+        i.free_memory = self.slurm_client_manager.free_memory
+        self.service_set_status_message("Information served")
+        self.service_update_status()
 
     @service_forced_update()
     def _slurm_controller_relation_changed(self, event: RelationChangedEvent) -> None:
         """Fired when new `slurm.conf` file is loaded into `event.app` relation data bucket."""
-        pass
+        self.service_set_status_message("New slurm configuration detected")
+        self.service_update_status()
+        i = self.slurm_controller_interface.select(event.app)
+
+        if i.nonce == "":
+            self.service_set_status_message("Configuration is not ready yet")
+            self.service_update_status()
+        elif self.slurm_client_manager.hash != i.slurm_conf.checksum:
+            self.slurm_client_manager.write_new_conf(i.slurm_conf)
+            self.service_set_status_message("Slurm configuration updated")
+            self.service_update_status()
+        else:
+            self.service_set_status_message("Slurm configuration does not need to be updated")
+            self.service_update_status()
+
+    def __create_nonce(self) -> str:
+        """Create a nonce.
+
+        Returns:
+            str: Created nonce.
+        """
+        return secrets.token_urlsafe()
 
 
 if __name__ == "__main__":
