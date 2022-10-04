@@ -65,10 +65,10 @@ class MungeManager:
         """sha224 hash of `munge.key`.
 
         Raises:
-            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit
+            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit.
 
         Returns:
-            str: sha224 hash of `munge.key`
+            str: sha224 hash of `munge.key`.
         """
         if os.path.isfile("/etc/munge/munge.key"):
             sha224 = hashlib.sha224()
@@ -82,10 +82,10 @@ class MungeManager:
         """Location of munge key file on unit.
 
         Raises:
-            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit
+            MungeKeyNotFoundError: Thrown if `/etc/munge/munge.key` does not exist on unit.
 
         Returns:
-            str: Path to munge key file on unit
+            str: Path to munge key file on unit.
         """
         if os.path.isfile("/etc/munge/munge.key"):
             return "/etc/munge/munge.key"
