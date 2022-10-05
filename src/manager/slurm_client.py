@@ -5,9 +5,9 @@
 """Set up and manage slurmd."""
 
 import hashlib
-import ipaddress
 import logging
 import os
+from typing import Union
 
 import charms.operator_libs_linux.v0.apt as apt
 from charms.operator_libs_linux.v1.systemd import (
@@ -23,30 +23,10 @@ from sysprober.network import Network
 logger = logging.getLogger(__name__)
 
 
-class SlurmdNotFoundError(Exception):
-    """Raised when trying to perform an operation with slurmd but slurmd is not installed."""
+class SlurmClientManagerError(Exception):
+    """Raised when the slurm client manager encounters an error."""
 
-    def __init__(self, name: str, desc: str = "Slurmd is not installed.") -> None:
-        self.name = name
-        self.desc = desc
-        super().__init__(self.desc)
-
-    def __str__(self) -> str:
-        """String representation of SlurmdNotFoundError."""
-        return f"{self.desc} Please install slurmd using {self.name}.install()."
-
-
-class SlurmConfNotFoundError(Exception):
-    """Raised when manager cannot locate the `slurm.conf` file on a unit."""
-
-    def __init__(self, path: str, desc: str = "slurm.conf not found on host.") -> None:
-        self.path = path
-        self.desc = desc
-        super().__init__(self.desc)
-
-    def __str__(self) -> str:
-        """String representation of SlurmConfNotFoundError."""
-        return f"{self.desc} Location searched: {self.path}"
+    ...
 
 
 class SlurmClientManager:
@@ -57,138 +37,72 @@ class SlurmClientManager:
         self.__memory.convert("mb", floor=True)
         self.__network = Network()
 
-    @property
-    def installed(self) -> bool:
-        """Installation status of slurmd.
-
-        Returns:
-            bool: True if slurmd is installed on unit;
-            False if slurmd is not installed on unit.
-        """
-        return self.__is_installed()
-
-    @property
-    def running(self) -> bool:
-        """Status of slurmd daemon.
-
-        Returns:
-            bool: True if slurmd daemon is running;
-            False if slurmd daemon is not running.
-        """
-        return service_running("slurmd")
-
-    @property
-    def cpu_count(self) -> int:
-        """Retrieve unit's total CPUs.
-
-        Returns:
-            int: Unit's total CPUs.
-        """
-        return os.cpu_count()
-
-    @property
-    def free_memory(self) -> int:
-        """Retrieve the unit's free memory in mebibytes.
-
-        Returns:
-            int: Unit's free memory in mebibytes.
-        """
-        return self.__memory.memavailable
-
-    @property
-    def hostname(self) -> str:
-        """Retrieve hostname of unit.
-
-        Returns:
-            str: Hostname of unit.
-        """
-        return self.__network.info["hostname"]
-
-    @property
-    def ipv4_address(self) -> ipaddress.IPv4Address:
-        """Retrieve IPv4 address of unit's eth0 interface.
-
-        Returns:
-            ipaddress.IPv4Address: IPv4 address of unit's eth0 interface.
-        """
+        self.conf_file = "/etc/slurm/slurm.conf"
+        self.cpu_count = os.cpu_count()
+        self.free_memory = self.__memory.memavailable
+        self.hostname = self.__network.info["hostname"]
         for iface in self.__network.info["ifaces"]:
             if iface["name"] == "eth0":
                 for addr in iface["info"]["addr_info"]:
                     if addr["family"] == "inet":
-                        return addr["address"]
+                        self.ipv4_address = addr["address"]
 
-    @property
-    def hash(self) -> bool:
-        """sha224 hash of `slurm.conf`.
+    def get_hash(self, file: Union[str, None] = None) -> Union[str, None]:
+        """Get the sha224 hash of a file.
 
-        Raises:
-            SlurmConfNotFoundError: Thrown if `/etc/slurm/slurm.conf` does not exist on unit.
-
-        Returns:
-            str: sha224 hash of `slurm.conf`.
-        """
-        if os.path.isfile("/etc/slurm/slurm.conf"):
-            md5 = hashlib.md5()
-            md5.update(open("/etc/munge/munge.key", "rb").read())
-            return md5.hexdigest()
-        else:
-            raise SlurmConfNotFoundError("/etc/slurm/slurm.conf")
-
-    @property
-    def conf_file(self) -> str:
-        """Location of slurm configuration file on unit.
-
-        Raises:
-            SlurmConfNotFoundError: Thrown if `/etc/slurm/slurm.conf` does not exist on unit.
+        Args:
+            str | None: File to hash. Defaults to self.conf_file if file is None.
 
         Returns:
-            str: Path to slurm configuration file on unit.
+            str: sha224 hash of the file, or None if file does not exist.
         """
-        if os.path.isfile("/etc/slurm/slurm.conf"):
-            return "/etc/slurm/slurm.conf"
-        else:
-            raise SlurmConfNotFoundError("/etc/slurm/slurm.conf")
-
-    def generate_dummy_conf(self) -> None:
-        """Generate a dummy slurm configuration."""
-        if os.path.isfile("/etc/slurm/slurm.conf"):
-            os.remove("/etc/slurm/slurm.conf")
-        open("/etc/slurm/slurm.conf", "w").close()
+        file = self.conf_file if file is None else file
+        return (
+            hashlib.sha224(open(file, "rb").read()).hexdigest() if os.path.isfile(file) else None
+        )
 
     def write_new_conf(self, conf: FileDataInterface) -> None:
-        """Write a new slurm configuration to `/etc/slurm/slurm.conf`.
+        """Write a new slurm configuration.
 
         Args:
             conf (FileDataInterface): `slurm.conf` file received from event app.
 
         Raises:
-            SlurmdNotFoundError: Thrown if slurmd is not yet installed on unit.
+            SlurmClientManagerError: Thrown if slurmd is not installed on unit.
         """
         if self.__is_installed():
             logger.debug("Stopping slurmd daemon to set new slurm.conf file.")
             self.stop()
-            if os.path.isfile("/etc/slurm/slurm.conf"):
-                os.remove("/etc/slurm/slurm.conf")
             conf.save(conf.path)
             logger.debug("New slurm.conf file set. Restarting slurmd daemon.")
             self.start()
         else:
-            raise SlurmdNotFoundError(self.__class__.__name__)
+            raise SlurmClientManagerError("slurmd is not installed.")
 
     def install(self) -> None:
-        """Install SLURM compute daemon."""
+        """Install slurm compute daemon.
+
+        Raises:
+            SlurmClientManagerError: Thrown if slurmd fails to install.
+        """
         try:
-            logger.debug("Installing SLURM Compute Daemon (slurmd).")
+            logger.debug("Installing slurm compute daemon (slurmd).")
             apt.add_package("slurmd")
         except apt.PackageNotFoundError:
             logger.error("Could not install slurmd. Not found in package cache.")
+            raise SlurmClientManagerError("Failed to install slurmd.")
         except apt.PackageError as e:
             logger.error(f"Could not install slurmd. Reason: {e.message}.")
+            raise SlurmClientManagerError("Failed to install slurmd.")
         finally:
             logger.debug("slurmd installed.")
 
     def start(self) -> None:
-        """Start SLURM compute daemon."""
+        """Start slurm compute daemon.
+
+        Raises:
+            SlurmClientManagerError: Thrown if slurmd is not installed on unit.
+        """
         if self.__is_installed():
             logger.debug("Starting slurmd service.")
             if not service_running("slurmd"):
@@ -197,10 +111,14 @@ class SlurmClientManager:
             else:
                 logger.debug("slurmd service is already running.")
         else:
-            raise SlurmdNotFoundError(self.__class__.__name__)
+            raise SlurmClientManagerError("slurmd is not installed.")
 
     def stop(self) -> None:
-        """Stop SLURM compute daemon."""
+        """Stop slurm compute daemon.
+
+        Raises:
+            SlurmClientManagerError: Thrown if slurmd is not installed on unit.
+        """
         if self.__is_installed():
             logger.debug("Stopping slurmd service.")
             if service_running("slurmd"):
@@ -209,16 +127,20 @@ class SlurmClientManager:
             else:
                 logger.debug("slurmd service is already stopped.")
         else:
-            raise SlurmdNotFoundError(self.__class__.__name__)
+            raise SlurmClientManagerError("slurmd is not installed.")
 
     def restart(self) -> None:
-        """Restart SLURM compute daemon."""
+        """Restart slurm compute daemon.
+
+        Raises:
+            SlurmClientManagerError: Thrown if slurmd is not installed on unit.
+        """
         if self.__is_installed():
             logger.debug("Restarting slurmd service.")
             service_restart("slurmd")
             logger.debug("slurmd service restarted.")
         else:
-            raise SlurmdNotFoundError(self.__class__.__name__)
+            raise SlurmClientManagerError("slurmd is not installed.")
 
     def __is_installed(self) -> bool:
         """Internal function to check if slurmd Debian package is installed on the unit.
@@ -226,11 +148,4 @@ class SlurmClientManager:
         Returns:
             bool: True if Debian package is present; False if Debian package is not present.
         """
-        try:
-            slurmctld_status = apt.DebianPackage.from_installed_package("slurmd")
-            if slurmctld_status.present:
-                return True
-            else:
-                return False
-        except apt.PackageNotFoundError:
-            return False
+        return True if apt.DebianPackage.from_installed_package("slurmd").present else False

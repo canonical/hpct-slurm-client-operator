@@ -68,7 +68,6 @@ class SlurmClientCharm(ServiceCharm):
         self.service_set_status_message("Installing slurmd")
         self.service_update_status()
         self.slurm_client_manager.install()
-        self.slurm_client_manager.generate_dummy_conf()
 
         self.service_set_status_message()
         self.service_update_status()
@@ -111,10 +110,7 @@ class SlurmClientCharm(ServiceCharm):
         if i.nonce == "":
             self.service_set_status_message("Munge key is not ready")
             self.service_update_status()
-        elif (
-            self.munge_manager.get_hash() != i.munge_key.checksum
-            and self.munge_manager.get_hash() is not None
-        ):
+        elif self.munge_manager.get_hash() != i.munge_key.checksum:
             self.munge_manager.write_new_key(i.munge_key)
             self.service_set_status_message("Munge key updated")
             self.service_update_status()
@@ -128,6 +124,7 @@ class SlurmClientCharm(ServiceCharm):
         self.service_set_status_message("Serving information to detected controller")
         self.service_update_status()
         i = self.slurm_compute_interface.select(self.unit)
+
         i.nonce = self.__create_nonce()
         i.hostname = self.slurm_client_manager.hostname
         i.ip_address = self.slurm_client_manager.ipv4_address
@@ -146,7 +143,7 @@ class SlurmClientCharm(ServiceCharm):
         if i.nonce == "":
             self.service_set_status_message("Configuration is not ready yet")
             self.service_update_status()
-        elif self.slurm_client_manager.hash != i.slurm_conf.checksum:
+        elif self.slurm_client_manager.get_hash() != i.slurm_conf.checksum:
             self.slurm_client_manager.write_new_conf(i.slurm_conf)
             self.service_set_status_message("Slurm configuration updated")
             self.service_update_status()
