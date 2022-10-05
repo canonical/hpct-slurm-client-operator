@@ -20,9 +20,9 @@ from ops.charm import (
 from ops.main import main
 
 from interface import (
-    AuthMungeInterface,
-    SlurmComputeInterface,
-    SlurmControllerInterface,
+    AuthMungeSuperInterface,
+    SlurmComputeSuperInterface,
+    SlurmControllerSuperInterface,
 )
 from manager import MungeManager, SlurmClientManager
 
@@ -161,7 +161,7 @@ class SlurmClientCharm(ServiceCharm):
 
 
 if __name__ == "__main__":
-    interface_registry.register("relation-auth-munge", AuthMungeInterface)
-    interface_registry.register("relation-slurm-compute", SlurmComputeInterface)
-    interface_registry.register("relation-slurm-controller", SlurmControllerInterface)
+    interface_registry.register("relation-auth-munge", AuthMungeSuperInterface)
+    interface_registry.register("relation-slurm-compute", SlurmComputeSuperInterface)
+    interface_registry.register("relation-slurm-controller", SlurmControllerSuperInterface)
     main(SlurmClientCharm)

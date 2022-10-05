@@ -9,7 +9,7 @@ from hpctinterfaces.value import Integer, String
 from hpctinterfaces.value.network import IPAddress
 
 
-class SlurmComputeInterface(RelationSuperInterface):
+class SlurmComputeSuperInterface(RelationSuperInterface):
     """Super interface for the slurm-compute relation."""
 
     def __init__(self, charm, relname: str, role=None) -> None:

@@ -9,7 +9,7 @@ from hpctinterfaces.relation import AppBucketInterface, RelationSuperInterface
 from hpctinterfaces.value import String
 
 
-class AuthMungeInterface(RelationSuperInterface):
+class AuthMungeSuperInterface(RelationSuperInterface):
     """Super interface for the auth-munge relation."""
 
     def __init__(self, charm, relname: str, role=None) -> None:

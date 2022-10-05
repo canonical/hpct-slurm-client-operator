@@ -9,7 +9,7 @@ from hpctinterfaces.relation import AppBucketInterface, RelationSuperInterface
 from hpctinterfaces.value import String
 
 
-class SlurmControllerInterface(RelationSuperInterface):
+class SlurmControllerSuperInterface(RelationSuperInterface):
     """Super interface for the slurm-controller relation."""
 
     def __init__(self, charm, relname: str, role=None) -> None:
