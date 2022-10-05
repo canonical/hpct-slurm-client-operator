@@ -111,12 +111,15 @@ class SlurmClientCharm(ServiceCharm):
         if i.nonce == "":
             self.service_set_status_message("Munge key is not ready")
             self.service_update_status()
-        elif self.munge_manager.hash != i.munge_key.checksum:
+        elif (
+            self.munge_manager.get_hash() != i.munge_key.checksum
+            and self.munge_manager.get_hash() is not None
+        ):
             self.munge_manager.write_new_key(i.munge_key)
             self.service_set_status_message("Munge key updated")
             self.service_update_status()
         else:
-            self.service_set_status_message("Munge does not need to be updated")
+            self.service_set_status_message("Munge key not updated")
             self.service_update_status()
 
     @service_forced_update()
