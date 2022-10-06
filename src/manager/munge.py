@@ -20,7 +20,6 @@ from charms.operator_libs_linux.v1.systemd import (
     service_start,
     service_stop,
 )
-from hpctinterfaces.ext.file import FileDataInterface
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ class MungeManager:
 
         Raises:
             MungeManagerError: Thrown if munge is not installed on unit.
-        """        
+        """
         if self.__is_installed():
             logger.debug("Stopping munge daemon to set new munge key.")
             self.stop()

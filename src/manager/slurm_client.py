@@ -82,7 +82,7 @@ class SlurmClientManager:
 
         Raises:
             SlurmClientManagerError: Thrown if slurmd is not installed on unit.
-        """        
+        """
         if self.__is_installed():
             logger.debug("Stopping slurmd daemon to set new slurm.conf file.")
             self.stop()
