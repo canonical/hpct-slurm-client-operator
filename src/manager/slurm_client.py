@@ -4,9 +4,12 @@
 
 """Set up and manage slurmd."""
 
+import grp
 import hashlib
 import logging
 import os
+import pathlib
+import pwd
 from typing import Union
 
 import charms.operator_libs_linux.v0.apt as apt
@@ -16,7 +19,6 @@ from charms.operator_libs_linux.v1.systemd import (
     service_start,
     service_stop,
 )
-from hpctinterfaces.ext.file import FileDataInterface
 from sysprober.memory import Memory
 from sysprober.network import Network
 
@@ -61,19 +63,39 @@ class SlurmClientManager:
             hashlib.sha224(open(file, "rb").read()).hexdigest() if os.path.isfile(file) else None
         )
 
-    def write_new_conf(self, conf: FileDataInterface) -> None:
+    def write_new_conf(
+        self,
+        data: bytes,
+        path: Union[str, None] = None,
+        mode: Union[int, None] = None,
+        user: Union[str, None] = None,
+        group: Union[str, None] = None,
+    ) -> None:
         """Write a new slurm configuration.
 
         Args:
-            conf (FileDataInterface): `slurm.conf` file received from event app.
+            data (bytes): Slurm configuration file.
+            path (str | None): Path to write configuration file. Defaults to self.conf_file.
+            mode (int | None): File access mode. Defaults to None.
+            user (str | None): User to own file. Defaults to None.
+            group (str | None): Group to own file. Defaults to None.
 
         Raises:
             SlurmClientManagerError: Thrown if slurmd is not installed on unit.
-        """
+        """        
         if self.__is_installed():
             logger.debug("Stopping slurmd daemon to set new slurm.conf file.")
             self.stop()
-            conf.save(conf.path)
+            path = self.conf_file if path is None else path
+            p = pathlib.Path(path)
+            p.touch()
+            uid = pwd.getpwnam(user).pw_uid if user is not None else user
+            gid = grp.getgrnam(group).gr_gid if group is not None else group
+            if -1 not in [uid, gid] and None not in [uid, gid]:
+                os.chown(path, uid, gid)
+            if mode is not None:
+                p.chmod(mode)
+            p.write_bytes(data)
             logger.debug("New slurm.conf file set. Restarting slurmd daemon.")
             self.start()
         else:

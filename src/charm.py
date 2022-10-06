@@ -109,7 +109,12 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Munge key is not ready")
             self.service_update_status()
         elif self.munge_manager.get_hash() != i.munge_key.checksum:
-            self.munge_manager.write_new_key(i.munge_key)
+            self.munge_manager.write_new_key(
+                i.munge_key.data,
+                mode=i.munge_key.mode,
+                user=i.munge_key.owner,
+                group=i.munge_key.group,
+            )
             self.service_set_status_message("Munge key updated")
             self.service_update_status()
         else:
@@ -142,7 +147,7 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Configuration is not ready yet")
             self.service_update_status()
         elif self.slurm_client_manager.get_hash() != i.slurm_conf.checksum:
-            self.slurm_client_manager.write_new_conf(i.slurm_conf)
+            self.slurm_client_manager.write_new_conf(i.slurm_conf.data)
             self.service_set_status_message("Slurm configuration updated")
             self.service_update_status()
         else:
