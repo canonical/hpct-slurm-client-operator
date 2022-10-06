@@ -4,6 +4,7 @@
 
 """Interface for the auth-munge relation."""
 
+from hpctinterfaces import interface_registry
 from hpctinterfaces.ext.file import FileDataInterface
 from hpctinterfaces.relation import AppBucketInterface, RelationSuperInterface
 from hpctinterfaces.value import String
@@ -12,8 +13,8 @@ from hpctinterfaces.value import String
 class AuthMungeSuperInterface(RelationSuperInterface):
     """Super interface for the auth-munge relation."""
 
-    def __init__(self, charm, relname: str, role=None) -> None:
-        super().__init__(charm, relname, role)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         self.interface_classes[("provider", "app")] = self.AuthMungeAppInterface
 
@@ -22,3 +23,6 @@ class AuthMungeSuperInterface(RelationSuperInterface):
 
         nonce = String("")
         munge_key = FileDataInterface()
+
+
+interface_registry.register("relation-auth-munge", AuthMungeSuperInterface)

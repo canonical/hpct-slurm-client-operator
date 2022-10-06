@@ -19,11 +19,9 @@ from ops.charm import (
 )
 from ops.main import main
 
-from interface import (
-    AuthMungeSuperInterface,
-    SlurmComputeSuperInterface,
-    SlurmControllerSuperInterface,
-)
+import interfaces.auth_munge
+import interfaces.slurm_compute
+import interfaces.slurm_controller
 from manager import MungeManager, SlurmClientManager
 
 logger = logging.getLogger(__name__)
@@ -161,7 +159,4 @@ class SlurmClientCharm(ServiceCharm):
 
 
 if __name__ == "__main__":
-    interface_registry.register("relation-auth-munge", AuthMungeSuperInterface)
-    interface_registry.register("relation-slurm-compute", SlurmComputeSuperInterface)
-    interface_registry.register("relation-slurm-controller", SlurmControllerSuperInterface)
     main(SlurmClientCharm)

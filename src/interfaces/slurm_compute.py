@@ -4,6 +4,7 @@
 
 """Interface for the slurm-compute relation."""
 
+from hpctinterfaces import interface_registry
 from hpctinterfaces.relation import RelationSuperInterface, UnitBucketInterface
 from hpctinterfaces.value import Integer, String
 from hpctinterfaces.value.network import IPAddress
@@ -12,8 +13,8 @@ from hpctinterfaces.value.network import IPAddress
 class SlurmComputeSuperInterface(RelationSuperInterface):
     """Super interface for the slurm-compute relation."""
 
-    def __init__(self, charm, relname: str, role=None) -> None:
-        super().__init__(charm, relname, role)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         self.interface_classes[("provider", "unit")] = self.SlurmComputeUnitInterface
 
@@ -25,3 +26,6 @@ class SlurmComputeSuperInterface(RelationSuperInterface):
         ip_address = IPAddress("0.0.0.0")
         cpu_count = Integer(0)
         free_memory = Integer(0)
+
+
+interface_registry.register("relation-slurm-compute", SlurmComputeSuperInterface)
