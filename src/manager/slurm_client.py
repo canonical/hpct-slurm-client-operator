@@ -14,7 +14,6 @@ from typing import Union
 
 import charms.operator_libs_linux.v0.apt as apt
 from charms.operator_libs_linux.v1.systemd import (
-    service_restart,
     service_running,
     service_start,
     service_stop,
@@ -39,7 +38,7 @@ class SlurmClientManager:
         self.__memory.convert("mb", floor=True)
         self.__network = Network()
 
-        self.conf_file = "/etc/slurm/slurm.conf"
+        self.conf_file_path = "/etc/slurm/slurm.conf"
         self.cpu_count = os.cpu_count()
         self.free_memory = self.__memory.memavailable
         self.hostname = self.__network.info["hostname"]
@@ -49,18 +48,19 @@ class SlurmClientManager:
                     if addr["family"] == "inet":
                         self.ipv4_address = addr["address"]
 
-    def get_hash(self, file: Union[str, None] = None) -> Union[str, None]:
+    def get_hash(self, path: Union[str, None] = None) -> Union[str, None]:
         """Get the sha224 hash of a file.
 
         Args:
-            str | None: File to hash. Defaults to self.conf_file if file is None.
+            path (str | None): Path to file to hash.
+            Defaults to `self.conf_file_path` if path is None.
 
         Returns:
             str: sha224 hash of the file, or None if file does not exist.
         """
-        file = self.conf_file if file is None else file
+        path = self.conf_file_path if path is None else path
         return (
-            hashlib.sha224(open(file, "rb").read()).hexdigest() if os.path.isfile(file) else None
+            hashlib.sha224(open(path, "rb").read()).hexdigest() if os.path.isfile(path) else None
         )
 
     def write_new_conf(
@@ -75,7 +75,7 @@ class SlurmClientManager:
 
         Args:
             data (bytes): Slurm configuration file.
-            path (str | None): Path to write configuration file. Defaults to self.conf_file.
+            path (str | None): Path to write configuration file. Defaults to self.conf_file_path.
             mode (int | None): File access mode. Defaults to None.
             user (str | None): User to own file. Defaults to None.
             group (str | None): Group to own file. Defaults to None.
@@ -86,7 +86,7 @@ class SlurmClientManager:
         if self.__is_installed():
             logger.debug("Stopping slurmd daemon to set new slurm.conf file.")
             self.stop()
-            path = self.conf_file if path is None else path
+            path = self.conf_file_path if path is None else path
             p = pathlib.Path(path)
             p.touch()
             uid = pwd.getpwnam(user).pw_uid if user is not None else user
@@ -110,11 +110,8 @@ class SlurmClientManager:
         try:
             logger.debug("Installing slurm compute daemon (slurmd).")
             apt.add_package("slurmd")
-        except apt.PackageNotFoundError:
-            logger.error("Could not install slurmd. Not found in package cache.")
-            raise SlurmClientManagerError("Failed to install slurmd.")
-        except apt.PackageError as e:
-            logger.error(f"Could not install slurmd. Reason: {e.message}.")
+        except apt.PackageError or apt.PackageNotFoundError as e:
+            logger.error(f"Error installing slurmd. Reason: {e.message}.")
             raise SlurmClientManagerError("Failed to install slurmd.")
         finally:
             logger.debug("slurmd installed.")
@@ -159,7 +156,8 @@ class SlurmClientManager:
         """
         if self.__is_installed():
             logger.debug("Restarting slurmd service.")
-            service_restart("slurmd")
+            self.stop()
+            self.start()
             logger.debug("slurmd service restarted.")
         else:
             raise SlurmClientManagerError("slurmd is not installed.")

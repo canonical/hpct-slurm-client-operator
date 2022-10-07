@@ -15,7 +15,6 @@ from typing import Union
 
 import charms.operator_libs_linux.v0.apt as apt
 from charms.operator_libs_linux.v1.systemd import (
-    service_restart,
     service_running,
     service_start,
     service_stop,
@@ -34,18 +33,19 @@ class MungeManager:
     """Top-level manager class for controlling munge on unit."""
 
     def __init__(self) -> None:
-        self.key = "/etc/munge/munge.key"
+        self.key_file_path = "/etc/munge/munge.key"
 
     def get_hash(self, path: Union[str, None] = None) -> Union[str, None]:
         """Get the sha224 hash of a file.
 
         Args:
-            str | None: Path to file on unit. Defaults to self.key if file is None.
+            path (str | None): Path to file on unit.
+            Defaults to `self.key_file_path` if path is None.
 
         Returns:
             str | None: sha224 hash of the file, or None if file does not exist.
         """
-        path = self.key if path is None else path
+        path = self.key_file_path if path is None else path
         return (
             hashlib.sha224(open(path, "rb").read()).hexdigest() if os.path.isfile(path) else None
         )
@@ -59,8 +59,8 @@ class MungeManager:
         if self.__is_installed():
             logger.debug("Stopping munge daemon to generate new key.")
             self.stop()
-            os.remove(self.key) if os.path.isfile(self.key) else ...
-            subprocess.run(["mungekey", "-c", "-k", self.key])
+            os.remove(self.key_file_path) if os.path.isfile(self.key_file_path) else ...
+            subprocess.run(["mungekey", "-c", "-k", self.key_file_path])
             self.start()
             logger.debug("New munge key generated. Restarting munge daemon")
         else:
@@ -69,19 +69,19 @@ class MungeManager:
     def write_new_key(
         self,
         data: bytes,
+        mode: int,
+        user: str,
+        group: str,
         path: Union[str, None] = None,
-        mode: Union[int, None] = None,
-        user: Union[str, None] = None,
-        group: Union[str, None] = None,
     ) -> None:
         """Write a new munge key.
 
         Args:
             data (bytes): Munge key file.
-            path (str | None): Path to write configuration file. Defaults to self.key.
             mode (int | None): File access mode. Defaults to None.
             user (str | None) : User to own file. Defaults to None.
             group (str | None): Group to own file. Defaults to None.
+            path (str | None): Path to write configuration file. Defaults to self.key_file_path.
 
         Raises:
             MungeManagerError: Thrown if munge is not installed on unit.
@@ -89,15 +89,13 @@ class MungeManager:
         if self.__is_installed():
             logger.debug("Stopping munge daemon to set new munge key.")
             self.stop()
-            path = self.key if path is None else path
+            path = self.key_file_path if path is None else path
             p = pathlib.Path(path)
             p.touch()
-            uid = pwd.getpwnam(user).pw_uid if user is not None else user
-            gid = grp.getgrnam(group).gr_gid if group is not None else group
-            if -1 not in [uid, gid] and None not in [uid, gid]:
-                os.chown(path, uid, gid)
-            if mode is not None:
-                p.chmod(mode)
+            uid = pwd.getpwnam(user).pw_uid
+            gid = grp.getgrnam(group).gr_gid
+            os.chown(path, uid, gid)
+            p.chmod(mode)
             p.write_bytes(data)
             logger.debug("New munge key set. Restarting munge daemon.")
             self.start()
@@ -113,11 +111,8 @@ class MungeManager:
         try:
             logger.debug("Installing munge authentication daemon (munge).")
             apt.add_package("munge")
-        except apt.PackageNotFoundError:
-            logger.error("Could not install munge. Not found in package cache.")
-            raise MungeManagerError("Failed to install munge.")
-        except apt.PackageError as e:
-            logger.error(f"Could not install munge. Reason: {e.message}.")
+        except apt.PackageError or apt.PackageNotFoundError as e:
+            logger.error(f"Error installing munge. Reason: {e.message}.")
             raise MungeManagerError("Failed to install munge.")
         finally:
             logger.debug("Munge installed.")
@@ -162,7 +157,8 @@ class MungeManager:
         """
         if self.__is_installed():
             logger.debug("Restarting munge service.")
-            service_restart("munge")
+            self.stop()
+            self.start()
             logger.debug("Munge service restarted.")
         else:
             raise MungeManagerError("Munge is not installed.")
