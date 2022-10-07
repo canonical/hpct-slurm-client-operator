@@ -16,14 +16,14 @@ subordinate: true
 
 provides:
   slurm-compute:
-    interface: compute
+    interface: slurm-compute
 
 requires:
   auth-munge:
     interface: auth-munge
 
   slurm-controller:
-    interface: controller
+    interface: slurm-controller
 
   slurm-client-ready:
     interface: subordinate-ready
