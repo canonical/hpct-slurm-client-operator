@@ -111,7 +111,7 @@ class MungeManager:
         try:
             logger.debug("Installing munge authentication daemon (munge).")
             apt.add_package("munge")
-        except apt.PackageError or apt.PackageNotFoundError as e:
+        except (apt.PackageError, apt.PackageNotFoundError) as e:
             logger.error(f"Error installing munge. Reason: {e.message}.")
             raise MungeManagerError("Failed to install munge.")
         finally:

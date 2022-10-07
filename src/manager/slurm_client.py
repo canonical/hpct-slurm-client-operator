@@ -110,7 +110,7 @@ class SlurmClientManager:
         try:
             logger.debug("Installing slurm compute daemon (slurmd).")
             apt.add_package("slurmd")
-        except apt.PackageError or apt.PackageNotFoundError as e:
+        except (apt.PackageError, apt.PackageNotFoundError) as e:
             logger.error(f"Error installing slurmd. Reason: {e.message}.")
             raise SlurmClientManagerError("Failed to install slurmd.")
         finally:
