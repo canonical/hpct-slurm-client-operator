@@ -14,6 +14,5 @@ bases:
 parts:
   charm:
     override-build: |
-      # Vendored packages
-      git --version || apt-get install -y git
+      git --version || apt install -y git
       craftctl default
