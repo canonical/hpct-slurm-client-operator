@@ -185,7 +185,7 @@ class SlurmClientCharm(ServiceCharm):
         Args:
             key (str): Key to update.
             value (bool): Boolean value to set.
-        """ 
+        """
         if key == "slurm-client-ready":
             self.ready_siface.select(self.unit).status = self.service_get_sync(key)
 
