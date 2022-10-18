@@ -43,6 +43,9 @@ class SlurmClientCharm(ServiceCharm):
         self.slurm_controller_siface = interface_registry.load(
             "relation-slurm-controller", self, "slurm-controller"
         )
+        self.ready_siface = interface_registry.load(
+            "relation-subordinate-ready", self, "slurm-client-ready"
+        )
 
         self.framework.observe(
             self.on.auth_munge_relation_changed, self._auth_munge_relation_changed
@@ -53,6 +56,11 @@ class SlurmClientCharm(ServiceCharm):
         self.framework.observe(
             self.on.slurm_controller_relation_changed, self._slurm_controller_relation_changed
         )
+
+        self.service_init_sync("auth-munge", False)
+        self.service_init_sync("slurm-compute", False)
+        self.service_init_sync("slurm-controller", False)
+        self.service_init_sync("slurm-client-ready", False, self.__sync_handler)
 
     @service_forced_update()
     def _service_install(self, event: InstallEvent) -> None:
@@ -79,6 +87,7 @@ class SlurmClientCharm(ServiceCharm):
         self.service_update_status()
         self.slurm_client_manager.start()
 
+        self.service_set_sync("slurm-client-ready", True)
         self.service_set_status_message()
         self.service_update_status()
 
@@ -99,6 +108,7 @@ class SlurmClientCharm(ServiceCharm):
     @service_forced_update()
     def _auth_munge_relation_changed(self, event: RelationChangedEvent) -> None:
         """Fired when new `munge.key` is loaded into `event.app` relation data bucket."""
+        self.service_set_sync("auth-munge", False)
         self.service_set_status_message("New munge key detected")
         self.service_update_status()
         iface = self.auth_munge_siface.select(event.app)
@@ -120,6 +130,8 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Munge key not updated")
             self.service_update_status()
 
+        self.service_set_sync("auth-munge", True)
+
     @service_forced_update()
     def _slurm_compute_relation_joined(self, event: RelationJoinedEvent) -> None:
         """Fired when new SLURM controller is related to application."""
@@ -132,12 +144,14 @@ class SlurmClientCharm(ServiceCharm):
         iface.ip_address = self.slurm_client_manager.ipv4_address
         iface.cpu_count = self.slurm_client_manager.cpu_count
         iface.free_memory = self.slurm_client_manager.free_memory
+        self.service_set_sync("slurm-compute", True)
         self.service_set_status_message("Information served")
         self.service_update_status()
 
     @service_forced_update()
     def _slurm_controller_relation_changed(self, event: RelationChangedEvent) -> None:
         """Fired when new `slurm.conf` file is loaded into `event.app` relation data bucket."""
+        self.service_set_sync("slurm-controller", False)
         self.service_set_status_message("New slurm configuration detected")
         self.service_update_status()
         iface = self.slurm_controller_siface.select(event.app)
@@ -155,6 +169,8 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Slurm configuration does not need to be updated")
             self.service_update_status()
 
+        self.service_set_sync("slurm-controller", True)
+
     def __create_nonce(self) -> str:
         """Create a nonce.
 
@@ -162,6 +178,16 @@ class SlurmClientCharm(ServiceCharm):
             str: Created nonce.
         """
         return secrets.token_urlsafe()
+
+    def __sync_handler(self, key: str, value: bool) -> None:
+        """Custom sync event handling when setting sync status.
+
+        Args:
+            key (str): Key to update.
+            value (bool): Boolean value to set.
+        """ 
+        if key == "slurm-client-ready":
+            self.ready_siface.select(self.unit).status = self.service_get_sync(key)
 
 
 if __name__ == "__main__":
