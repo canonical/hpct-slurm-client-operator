@@ -107,8 +107,9 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Munge key is not ready")
             self.service_update_status()
         elif self.munge_manager.get_hash() != iface.munge_key.checksum:
-            self.munge_manager.write_new_key(
+            self.munge_manager.save_file(
                 iface.munge_key.data,
+                self.munge_manager.key_file_path,
                 mode=iface.munge_key.mode,
                 user=iface.munge_key.owner,
                 group=iface.munge_key.group,
