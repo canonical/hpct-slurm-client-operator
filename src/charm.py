@@ -146,7 +146,9 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Configuration is not ready yet")
             self.service_update_status()
         elif self.slurm_client_manager.get_hash() != iface.slurm_conf.checksum:
-            self.slurm_client_manager.write_new_conf(iface.slurm_conf.data)
+            self.slurm_client_manager.save_file(
+                iface.slurm_conf.data, self.slurm_client_manager.conf_file_path
+            )
             self.service_set_status_message("Slurm configuration updated")
             self.service_update_status()
         else:
