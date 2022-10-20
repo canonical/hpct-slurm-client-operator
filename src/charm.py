@@ -43,6 +43,9 @@ class SlurmClientCharm(ServiceCharm):
         self.slurm_controller_siface = interface_registry.load(
             "relation-slurm-controller", self, "slurm-controller"
         )
+        self.ready_siface = interface_registry.load(
+            "relation-subordinate-ready", self, "slurm-client-ready"
+        )
 
         self.framework.observe(
             self.on.auth_munge_relation_changed, self._auth_munge_relation_changed
@@ -53,6 +56,8 @@ class SlurmClientCharm(ServiceCharm):
         self.framework.observe(
             self.on.slurm_controller_relation_changed, self._slurm_controller_relation_changed
         )
+
+        self.service_init_sync("slurm-client-ready", False, self.__sync_handler)
 
     @service_forced_update()
     def _service_install(self, event: InstallEvent) -> None:
@@ -79,6 +84,7 @@ class SlurmClientCharm(ServiceCharm):
         self.service_update_status()
         self.slurm_client_manager.start()
 
+        self.service_set_sync("slurm-client-ready", True)
         self.service_set_status_message()
         self.service_update_status()
 
@@ -107,8 +113,9 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Munge key is not ready")
             self.service_update_status()
         elif self.munge_manager.get_hash() != iface.munge_key.checksum:
-            self.munge_manager.write_new_key(
+            self.munge_manager.save_file(
                 iface.munge_key.data,
+                self.munge_manager.key_file_path,
                 mode=iface.munge_key.mode,
                 user=iface.munge_key.owner,
                 group=iface.munge_key.group,
@@ -145,7 +152,9 @@ class SlurmClientCharm(ServiceCharm):
             self.service_set_status_message("Configuration is not ready yet")
             self.service_update_status()
         elif self.slurm_client_manager.get_hash() != iface.slurm_conf.checksum:
-            self.slurm_client_manager.write_new_conf(iface.slurm_conf.data)
+            self.slurm_client_manager.save_file(
+                iface.slurm_conf.data, self.slurm_client_manager.conf_file_path
+            )
             self.service_set_status_message("Slurm configuration updated")
             self.service_update_status()
         else:
@@ -159,6 +168,16 @@ class SlurmClientCharm(ServiceCharm):
             str: Created nonce.
         """
         return secrets.token_urlsafe()
+
+    def __sync_handler(self, key: str, value: bool) -> None:
+        """Custom sync event handling when setting sync status.
+
+        Args:
+            key (str): Key to update.
+            value (bool): Boolean value to set.
+        """
+        if key == "slurm-client-ready":
+            self.ready_siface.select(self.unit).status = self.service_get_sync(key)
 
 
 if __name__ == "__main__":
